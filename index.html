@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>$kySync — AI Forecast Reliability & Bust Detection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0a1120">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Location Modal -->
+    <div id="locationModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="brand-mark" style="margin: 0 auto 16px;">SS</div>
+            <h2>Welcome to SkySync</h2>
+            <p>To provide accurate forecast bust detection, please select your region.</p>
+            <div class="modal-actions">
+                <button id="btnDetect" class="btn">Auto-Detect My Location</button>
+                <div style="margin:16px 0; color:var(--mute); font-size: 13px;">— OR —</div>
+                <select id="stateSelect" class="input-select">
+                    <option value="19.03,73.01,Maharashtra">Maharashtra (Navi Mumbai)</option>
+                    <option value="28.70,77.10,Delhi">Delhi</option>
+                    <option value="12.97,77.59,Karnataka">Karnataka (Bengaluru)</option>
+                    <option value="22.57,88.36,West Bengal">West Bengal (Kolkata)</option>
+                    <option value="13.08,80.27,Tamil Nadu">Tamil Nadu (Chennai)</option>
+                </select>
+                <button id="btnProceed" class="btn ghost" style="margin-top:12px;">Load Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Layout -->
+    <div id="sidebar">
+        <div class="brand"><div class="brand-mark">SS</div><div class="brandtext">SkySync</div></div>
+        <div class="status"><span class="dot"></span><span class="statustext">Live Data Active</span></div>
+        <nav id="navlist">
+            <div class="navitem active" data-view="overview"><span class="ic">&#9678;</span><span class="navlabel">Live Overview</span></div>
+            <div class="navitem" data-view="bust"><span class="ic">&#9888;</span><span class="navlabel">Bust Detection</span></div>
+            <div class="navitem" data-view="compare"><span class="ic">&#8646;</span><span class="navlabel">Forecast Comparison</span></div>
+            <div class="navitem" data-view="risk"><span class="ic">&#9650;</span><span class="navlabel">Risk Analysis</span></div>
+            <div class="navitem" data-view="explain"><span class="ic">&#10070;</span><span class="navlabel">Explainability</span></div>
+            <div class="navitem" data-view="data"><span class="ic">&#8593;</span><span class="navlabel">Data Explorer</span></div>
+            <div class="navitem" data-view="alerts"><span class="ic">&#128276;</span><span class="navlabel">Alerts</span></div>
+        </nav>
+        <button id="collapseBtn">&#8676;</button>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="main">
+        <div class="topbar">
+            <div><h1 id="pageTitle">Live Overview</h1><div class="meta" id="pageMeta">Connected to Open-Meteo NWP</div></div>
+            <div class="region-badge" id="currentRegionHeader">Awaiting Location...</div>
+        </div>
+        
+        <div class="page">
+            
+            <!-- VIEW: OVERVIEW -->
+            <div id="view-overview" class="view-section active">
+                <div class="grid kpis">
+                    <div class="card kpi"><div class="label">Forecast Confidence</div><div class="val num" id="kpi-conf">--%</div><div class="sub">Next 24 Hours</div></div>
+                    <div class="card kpi"><div class="label">Bust Probability</div><div class="val num" id="kpi-bust">--%</div><div class="sub" id="kpi-risk">-- Risk</div></div>
+                    <div class="card kpi"><div class="label">Primary Condition</div><div class="val" id="kpi-wmo" style="font-size: 18px;">--</div><div class="sub">Dominant Weather</div></div>
+                    <div class="card kpi"><div class="label">Wind Dynamics</div><div class="val num" id="kpi-wind">--</div><div class="sub">km/h</div></div>
+                    <div class="card kpi"><div class="label">Precipitation</div><div class="val num" id="kpi-precip">--</div><div class="sub">mm expected</div></div>
+                </div>
+
+                <div class="rowgrid" style="margin-top: 14px;">
+                    <div class="card">
+                        <div class="sectionTitle">Forecast Bust Map</div>
+                        <div id="map"></div>
+                        <div class="legend">
+                            <span><span class="sw" style="background:var(--green)"></span>High Confidence</span>
+                            <span><span class="sw" style="background:var(--amber)"></span>Moderate</span>
+                            <span><span class="sw" style="background:var(--red)"></span>High Bust Risk</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="sectionTitle">AI Explainability Overview</div>
+                        <p style="font-size:13.5px;color:var(--sub);line-height:1.6;" id="ai-explanation">Select a region on the map to run the forecast reliability analysis.</p>
+                        <div class="sectionTitle" style="margin-top:24px;font-size:13px">Current Uncertainty Drivers</div>
+                        <div id="factor-bars"><div class="empty">No data loaded yet.</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: BUST DETECTION -->
+            <div id="view-bust" class="view-section">
+                <div class="card">
+                    <div class="sectionTitle">Regional Forecast Bust Rankings</div>
+                    <p class="small" style="margin-bottom: 16px;">AI-driven identification of regions where current NWP forecasts are likely to fail based on historical variance.</p>
+                    <table>
+                        <thead>
+                            <tr><th>Rank</th><th>Region</th><th>Confidence</th><th>Bust Prob.</th><th>Main Variable</th><th>Risk Status</th></tr>
+                        </thead>
+                        <tbody id="bust-table-body">
+                            <!-- Dynamic Row inserted via JS -->
+                            <tr><td>2</td><td>Odisha</td><td class="num">45.0%</td><td class="num">55.0%</td><td>Precipitation</td><td><span class="badge b-high">High</span></td></tr>
+                            <tr><td>3</td><td>Assam</td><td class="num">62.0%</td><td class="num">38.0%</td><td>Precipitation</td><td><span class="badge b-mod">Moderate</span></td></tr>
+                            <tr><td>4</td><td>Delhi</td><td class="num">88.0%</td><td class="num">12.0%</td><td>Temperature</td><td><span class="badge b-low">Low</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VIEW: FORECAST COMPARISON -->
+            <div id="view-compare" class="view-section">
+                <div class="card" style="margin-bottom: 14px;">
+                    <div class="sectionTitle">Model vs. Observed Behavior</div>
+                    <div class="chartbox"><canvas id="cmpCanvas"></canvas></div>
+                </div>
+                <div class="grid kpis">
+                    <div class="card kpi"><div class="label">Mean Absolute Error (MAE)</div><div class="val num">2.4</div></div>
+                    <div class="card kpi"><div class="label">Root Mean Square Error</div><div class="val num">3.1</div></div>
+                    <div class="card kpi"><div class="label">Forecast Bias</div><div class="val num">+1.2</div></div>
+                </div>
+            </div>
+
+            <!-- VIEW: RISK ANALYSIS -->
+            <div id="view-risk" class="view-section">
+                <div class="rowgrid">
+                    <div class="card"><div class="sectionTitle">Confidence vs Lead Time</div><div class="chartbox"><canvas id="riskCanvas1"></canvas></div></div>
+                    <div class="card"><div class="sectionTitle">Bust Probability Distribution</div><div class="chartbox"><canvas id="riskCanvas2"></canvas></div></div>
+                </div>
+            </div>
+
+            <!-- VIEW: EXPLAINABILITY -->
+            <div id="view-explain" class="view-section">
+                <div class="card">
+                    <div class="sectionTitle">Deep AI Explainability</div>
+                    <p style="font-size:14px;color:var(--text);line-height:1.6; padding: 12px; background: var(--card2); border-radius: 8px; border: 1px solid var(--line);" id="deep-ai-text">
+                        Awaiting data to generate insights...
+                    </p>
+                    <div class="sectionTitle" style="margin-top:24px;">Meteorological Factor Breakdown</div>
+                    <div id="deep-factor-bars"></div>
+                </div>
+            </div>
+
+            <!-- VIEW: DATA EXPLORER -->
+            <div id="view-data" class="view-section">
+                <div class="card" style="margin-bottom:14px">
+                    <div class="sectionTitle">Upload Custom Weather Dataset</div>
+                    <div class="small" style="margin-bottom:10px">Accepted formats: CSV. System accepts legacy NWP outputs for back-testing bust detection algorithms.</div>
+                    <div class="dropzone" id="dropzone">Click to choose a CSV file, or drag one here</div>
+                </div>
+                <div class="card">
+                    <div class="sectionTitle">Manual Observation Entry</div>
+                    <div class="formgrid">
+                        <div><label>Region name</label><input type="text" placeholder="e.g. Goa"></div>
+                        <div><label>Latitude</label><input type="number" placeholder="15.3"></div>
+                        <div><label>Longitude</label><input type="number" placeholder="74.1"></div>
+                        <div><label>Variable</label><select><option>Temperature</option><option>Precipitation</option></select></div>
+                        <div><label>Forecast value</label><input type="number" placeholder="e.g. 32.5"></div>
+                        <div><label>Observed value</label><input type="number" placeholder="e.g. 27.0"></div>
+                    </div>
+                    <button class="btn" style="margin-top:16px; width: 200px;">Add Observation</button>
+                </div>
+            </div>
+
+            <!-- VIEW: ALERTS -->
+            <div id="view-alerts" class="view-section">
+                <div class="card" style="margin-bottom:16px;">
+                    <div class="sectionTitle">Alert Configuration</div>
+                    <div style="display:flex; align-items:center; gap: 16px;">
+                        <label class="small">Bust Threshold: <b id="threshVal" style="color:var(--cyan2)">70%</b></label>
+                        <input type="range" id="threshSlider" min="20" max="95" step="1" value="70" style="width:220px">
+                    </div>
+                </div>
+                <div id="alertList">
+                    <!-- Dynamic Alert via JS -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SkySync AI Chatbot -->
+    <div id="chatbot">
+        <div id="chat-header"><span>SkySync AI</span><button id="close-chat">&times;</button></div>
+        <div id="chat-messages"></div>
+        <div id="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Is it safe to go out today?">
+            <button id="send-chat" class="btn">Send</button>
+        </div>
+    </div>
+    <button id="chatbot-toggle">💬</button>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+    <script src="weatherApi.js"></script>
+    <script src="map.js"></script>
+    <script src="chatbot.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
