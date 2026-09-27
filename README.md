@@ -172,19 +172,6 @@ These combine into a transparent, weighted score — not a black box — so ever
 
 ---
 
-## 👥 Team
-
-<!-- EDIT: replace with your real team -->
-
-| Name | Role |
-|---|---|
-| Karan Shedge | Full-stack / Lead |
-| Vaidai Balapure | Design |
-| Purva Lokhande | Data/Backend logic |
-| Sanchita Yadav | — |
-| Shraddha Dhadas | — |
-| Akshata Biradar | — |
-
 **Mentors:** Sri. Rohit Mishra · Sri. Abdullah Suhail Ayyub Zinjani · Sri. K Suresh — SAC/ISRO
 
 ---
