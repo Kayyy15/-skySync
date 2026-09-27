@@ -178,12 +178,12 @@ These combine into a transparent, weighted score — not a black box — so ever
 
 | Name | Role |
 |---|---|
-| Your Name | Full-stack / Lead |
-| Teammate 2 | Design |
-| Teammate 3 | Data/Backend logic |
-| Teammate 4 | — |
-| Teammate 5 | — |
-| Teammate 6 | — |
+| Karan Shedge | Full-stack / Lead |
+| Vaidai Balapure | Design |
+| Purva Lokhande | Data/Backend logic |
+| Sanchita Yadav | — |
+| Shraddha Dhadas | — |
+| Akshata Biradar | — |
 
 **Mentors:** Sri. Rohit Mishra · Sri. Abdullah Suhail Ayyub Zinjani · Sri. K Suresh — SAC/ISRO
 
